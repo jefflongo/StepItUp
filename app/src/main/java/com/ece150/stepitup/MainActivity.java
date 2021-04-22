@@ -22,9 +22,8 @@ import android.view.View;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.TextView;
-
-import org.w3c.dom.Text;
 
 public class MainActivity extends AppCompatActivity implements SensorEventListener  {
 
@@ -32,6 +31,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private static final int STEP_GOAL_INVALID = -1;
 
     private int mStepCounter = 0;
+    private long mStartTime = 0;
     private int mTotalSteps = 0;
     private float mStepsHr = 0;
     private int mGoalsCompleted = 0;
@@ -39,35 +39,45 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private int mStepGoal = STEP_GOAL_INVALID;
 
     private SensorManager mSensorManager;
-    private Sensor mSensor = null;
+    private Sensor mAccelerometer = null;
+
+    // ECE 251 ONLY
+    private Sensor mMagnetometer = null;
+    private float[] mLastAccelerometerReading = new float[3];
+    private float[] mLastMagnetometerReading = new float[3];
+    private float[] mOrientation = new float[3];
+    private float[] mRotationMatrix = new float[9];
+    // ------------
 
     private StepDetector mStepDetector;
 
     private EditText mStepGoalEditText;
     private TextView mTotalStepsTextView;
+    private TextView mStepsHrTextView;
     private TextView mGoalsCompletedTextView;
+    // ECE 251 ONLY
+    private ImageView mCompassImageView;
+    // ------------
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-//        Handler handler = new Handler();
-//        Runnable runnable = new Runnable() {
-//            @Override
-//            public void run() {
-//
-//                handler.postDelayed(this, 1000);
-//            }
-//        };
-
         mStepGoalEditText = (EditText) findViewById(R.id.stepGoalEditText);
         mTotalStepsTextView = (TextView) findViewById(R.id.totalStepsValueTextView);
+        mStepsHrTextView = (TextView) findViewById(R.id.stepsHrValueTextView);
         mGoalsCompletedTextView = (TextView) findViewById(R.id.goalsCompletedValueTextView);
+        // ECE 251 ONLY
+        mCompassImageView = (ImageView) findViewById(R.id.compassImageView);
+        // ------------
 
         if (savedInstanceState != null) {
             mStepCounter = savedInstanceState.getInt("stepCounter");
             Log.d(TAG, "step counter restored: " + mStepCounter);
+            mStartTime = savedInstanceState.getLong("startTime");
+            Log.d(TAG, "start time restored: " + mStartTime);
             mStepGoal = savedInstanceState.getInt("stepGoal");
             mStepGoalEditText.setText(String.valueOf(mStepGoal));
             Log.d(TAG, "step goal restored: " + mStepGoal);
@@ -87,7 +97,21 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             mTotalSteps = 0;
             mStepsHr = 0;
             mGoalsCompleted = 0;
+            mStartTime = System.currentTimeMillis();
         }
+
+        Handler handler = new Handler();
+        final Runnable r = new Runnable() {
+            @Override
+            public void run() {
+                long elapsedMillis = System.currentTimeMillis() - mStartTime;
+                mStepsHr = 1000 * 60 * 60 * mTotalSteps / (float) elapsedMillis;
+                mStepsHrTextView.setText(String.valueOf(mStepsHr));
+                handler.postDelayed(this, 1000);
+            }
+        };
+
+        handler.postDelayed(r, 1000);
 
         final Button saveButton = (Button) findViewById(R.id.saveButton);
         saveButton.setOnClickListener(new View.OnClickListener() {
@@ -126,10 +150,16 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         });
 
         mSensorManager = (SensorManager)getSystemService(Context.SENSOR_SERVICE);
-        mSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
-        if (mSensor != null) {
-            mSensorManager.registerListener(this, mSensor, SensorManager.SENSOR_DELAY_GAME);
+        mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
+        mMagnetometer = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        if (mAccelerometer != null) {
+            mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_GAME);
         }
+        // ECE 251 ONLY
+        if (mMagnetometer != null) {
+            mSensorManager.registerListener(this, mMagnetometer, SensorManager.SENSOR_DELAY_GAME);
+        }
+        // ------------
 
         mStepDetector = new StepDetector();
     }
@@ -139,6 +169,8 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         super.onSaveInstanceState(outState);
         outState.putInt("stepCounter", mStepCounter);
         Log.d(TAG, "step counter saved: " + mStepCounter);
+        outState.putLong("startTime", mStartTime);
+        Log.d(TAG, "start time saved: " + mStartTime);
         outState.putInt("stepGoal", mStepGoal);
         Log.d(TAG, "step goal saved: " + mStepGoal);
         outState.putInt("totalSteps", mTotalSteps);
@@ -152,27 +184,20 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     public final void onSensorChanged(SensorEvent event) {
         if (event.sensor.getType() == Sensor.TYPE_ACCELEROMETER) {
-            // check for step using raw accelerometer data
+            // ECE 251 ONLY
+            mLastAccelerometerReading = event.values;
+            handleCompass();
+            // ------------
             if (mStepDetector.detectStep(event.values[0], event.values[1], event.values[2])) {
-                Log.d(TAG, "detected step");
-                // update the total step count
-                mTotalSteps++;
-                mTotalStepsTextView.setText(String.valueOf(mTotalSteps));
-                // decrement the step counter if a goal is active
-                if (mStepCounter > 0) {
-                    mStepCounter--;
-                    if (!mStepGoalEditText.hasFocus()) {
-                        mStepGoalEditText.setText(String.valueOf(mStepCounter));
-                    }
-                    // check for goal complete
-                    if (mStepCounter == 0) {
-                        mGoalsCompleted++;
-                        mGoalsCompletedTextView.setText(String.valueOf(mGoalsCompleted));
-                        sendNotification("Goal completed!");
-                    }
-                }
+                handleStep();
             }
         }
+        // ECE 251 ONLY
+        if (event.sensor.getType() == Sensor.TYPE_MAGNETIC_FIELD) {
+            mLastMagnetometerReading = event.values;
+            handleCompass();
+        }
+        // ------------
     }
 
     @Override
@@ -208,5 +233,31 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         }
 
         notificationManager.notify(0, builder.build());
+    }
+
+    private void handleStep() {
+        Log.d(TAG, "detected step");
+        // update the total step count
+        mTotalSteps++;
+        mTotalStepsTextView.setText(String.valueOf(mTotalSteps));
+        // decrement the step counter if a goal is active
+        if (mStepCounter > 0) {
+            mStepCounter--;
+            if (!mStepGoalEditText.hasFocus()) {
+                mStepGoalEditText.setText(String.valueOf(mStepCounter));
+            }
+            // check for goal complete
+            if (mStepCounter == 0) {
+                mGoalsCompleted++;
+                mGoalsCompletedTextView.setText(String.valueOf(mGoalsCompleted));
+                sendNotification("Goal completed!");
+            }
+        }
+    }
+
+    private void handleCompass() {
+        SensorManager.getRotationMatrix(mRotationMatrix, null, mLastAccelerometerReading, mLastMagnetometerReading);
+        SensorManager.getOrientation(mRotationMatrix, mOrientation);
+        mCompassImageView.setRotation((float)(-mOrientation[0]*180/3.14159));
     }
 }
