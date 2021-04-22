@@ -2,13 +2,21 @@ package com.ece150.stepitup;
 
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
 
+import android.app.Notification;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Context;
+import android.content.Intent;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
 import android.hardware.SensorManager;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.View;
 import android.view.inputmethod.InputMethodManager;
@@ -44,19 +52,42 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        if (savedInstanceState != null) {
-            mStepCounter = savedInstanceState.getInt("stepCounter");
-            Log.d(TAG, "step counter restored: " + mStepCounter);
-            mStepGoal = savedInstanceState.getInt("stepGoal");
-            Log.d(TAG, "step goal restored: " + mStepGoal);
-        } else {
-            mStepCounter = 0;
-            mStepGoal = STEP_GOAL_INVALID;
-        }
+//        Handler handler = new Handler();
+//        Runnable runnable = new Runnable() {
+//            @Override
+//            public void run() {
+//
+//                handler.postDelayed(this, 1000);
+//            }
+//        };
 
         mStepGoalEditText = (EditText) findViewById(R.id.stepGoalEditText);
         mTotalStepsTextView = (TextView) findViewById(R.id.totalStepsValueTextView);
         mGoalsCompletedTextView = (TextView) findViewById(R.id.goalsCompletedValueTextView);
+
+        if (savedInstanceState != null) {
+            mStepCounter = savedInstanceState.getInt("stepCounter");
+            Log.d(TAG, "step counter restored: " + mStepCounter);
+            mStepGoal = savedInstanceState.getInt("stepGoal");
+            mStepGoalEditText.setText(String.valueOf(mStepGoal));
+            Log.d(TAG, "step goal restored: " + mStepGoal);
+            mTotalSteps = savedInstanceState.getInt("totalSteps");
+            mTotalStepsTextView.setText(String.valueOf(mTotalSteps));
+            Log.d(TAG, "total steps restored: " + mTotalSteps);
+            mStepsHr = savedInstanceState.getFloat("stepsHr");
+            mTotalStepsTextView.setText(String.valueOf(mStepsHr));
+            Log.d(TAG, "steps/hr restored: " + mStepsHr);
+            mGoalsCompleted = savedInstanceState.getInt("goalsCompleted");
+            mGoalsCompletedTextView.setText(String.valueOf(mGoalsCompleted));
+            Log.d(TAG, "goals completed restored: " + mGoalsCompleted);
+        } else {
+            Log.d(TAG, "savedInstanceState was null");
+            mStepCounter = 0;
+            mStepGoal = STEP_GOAL_INVALID;
+            mTotalSteps = 0;
+            mStepsHr = 0;
+            mGoalsCompleted = 0;
+        }
 
         final Button saveButton = (Button) findViewById(R.id.saveButton);
         saveButton.setOnClickListener(new View.OnClickListener() {
@@ -104,28 +135,18 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     }
 
     @Override
-    protected void onPause() {
-        super.onPause();
-        if (mSensor != null) {
-            mSensorManager.unregisterListener(this);
-        }
-    }
-
-    @Override
-    protected void onResume() {
-        super.onResume();
-        if (mSensor != null) {
-            mSensorManager.registerListener(this, mSensor, SensorManager.SENSOR_DELAY_GAME);
-        }
-    }
-
-    @Override
     protected void onSaveInstanceState(@NonNull Bundle outState) {
         super.onSaveInstanceState(outState);
         outState.putInt("stepCounter", mStepCounter);
         Log.d(TAG, "step counter saved: " + mStepCounter);
         outState.putInt("stepGoal", mStepGoal);
         Log.d(TAG, "step goal saved: " + mStepGoal);
+        outState.putInt("totalSteps", mTotalSteps);
+        Log.d(TAG, "total steps saved: " + mTotalSteps);
+        outState.putFloat("stepsHr", mStepsHr);
+        Log.d(TAG, "steps/hr saved: " + mStepsHr);
+        outState.putInt("goalsCompleted", mGoalsCompleted);
+        Log.d(TAG, "goals completed saved: " + mGoalsCompleted);
     }
 
     @Override
@@ -147,6 +168,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
                     if (mStepCounter == 0) {
                         mGoalsCompleted++;
                         mGoalsCompletedTextView.setText(String.valueOf(mGoalsCompleted));
+                        sendNotification("Goal completed!");
                     }
                 }
             }
@@ -156,5 +178,35 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     @Override
     public final void onAccuracyChanged(Sensor sensor, int accuracy) {
 
+    }
+
+    private void sendNotification(String text) {
+        Intent intent = getIntent();
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, 0);
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(getApplicationContext(), "notify")
+                .setSmallIcon(R.mipmap.ic_launcher_round)
+                .setContentTitle("StepItUp")
+                .setContentText(text)
+                .setDefaults(Notification.DEFAULT_SOUND | Notification.DEFAULT_VIBRATE)
+                .setPriority(NotificationCompat.PRIORITY_MAX)
+                .setContentIntent(pendingIntent)
+                .setAutoCancel(true);
+
+        NotificationManager notificationManager =
+                (NotificationManager) getApplicationContext().getSystemService(Context.NOTIFICATION_SERVICE);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+        {
+            String channelId = "notify";
+            NotificationChannel channel = new NotificationChannel(
+                    channelId,
+                    "Notification request channel",
+                    NotificationManager.IMPORTANCE_HIGH);
+            notificationManager.createNotificationChannel(channel);
+            builder.setChannelId(channelId);
+        }
+
+        notificationManager.notify(0, builder.build());
     }
 }
