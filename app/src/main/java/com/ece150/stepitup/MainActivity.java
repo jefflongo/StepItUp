@@ -49,7 +49,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private float[] mRotationMatrix = new float[9];
     // ------------
 
-    private StepDetector mStepDetector;
+    private StepDetector mStepDetector = new StepDetector();
 
     private EditText mStepGoalEditText;
     private TextView mTotalStepsTextView;
@@ -160,8 +160,6 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             mSensorManager.registerListener(this, mMagnetometer, SensorManager.SENSOR_DELAY_GAME);
         }
         // ------------
-
-        mStepDetector = new StepDetector();
     }
 
     @Override
