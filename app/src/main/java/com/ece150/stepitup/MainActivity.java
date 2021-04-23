@@ -176,7 +176,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_GAME);
         }
         if (mStepCounterSensor != null) {
-            mSensorManager.registerListener(this, mStepCounterSensor, SensorManager.SENSOR_DELAY_GAME);
+            mSensorManager.registerListener(this, mStepCounterSensor, SensorManager.SENSOR_DELAY_FASTEST);
         }
         // ECE 251 ONLY
         if (mMagnetometer != null) {
