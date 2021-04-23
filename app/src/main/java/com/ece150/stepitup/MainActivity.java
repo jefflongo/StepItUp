@@ -15,12 +15,18 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        // [TODO] Setup button behavior, launch step/hr task, initialize sensors
+        // [TODO] Setup button behavior
+        // [TODO] Create a thread to calculate steps/hr
+        // [TODO] Initialize UI elements
+        // [TODO] Request ACTIVITY_RECOGNITION permission
+        // [TODO] Initialize accelerometer and step counter sensors
+        // [TODO ECE 251 ONLY] Initialize magnetometer
     }
 
     @Override
     public final void onSensorChanged(SensorEvent event) {
         // [TODO] Handle the raw data. Hint: Provide data to the step detector, call `handleStep` if step detected
+        // [TODO] Update UI elements
     }
 
     @Override
