@@ -7,40 +7,28 @@
     tools:context=".MainActivity">
 
     <TextView
-        android:id="@+id/goalsCompletedValueTextView"
+        android:id="@+id/sensorValueValueTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="24dp"
         android:layout_marginLeft="24dp"
-        android:layout_marginTop="8dp"
+        android:layout_marginTop="16dp"
         android:text="0"
         android:textSize="20sp"
         app:layout_constraintStart_toEndOf="@+id/goalsCompletedTextView"
-        app:layout_constraintTop_toBottomOf="@+id/stepsHrValueTextView" />
+        app:layout_constraintTop_toBottomOf="@+id/stepGoalEditText" />
 
     <TextView
-        android:id="@+id/stepsHrValueTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="24dp"
-        android:layout_marginLeft="24dp"
-        android:layout_marginTop="8dp"
-        android:text="0"
-        android:textSize="20sp"
-        app:layout_constraintStart_toEndOf="@+id/goalsCompletedTextView"
-        app:layout_constraintTop_toBottomOf="@+id/totalStepsValueTextView" />
-
-    <TextView
-        android:id="@+id/goalsCompletedTextView"
+        android:id="@+id/sensorValueTextView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="16dp"
         android:layout_marginLeft="16dp"
-        android:layout_marginTop="8dp"
-        android:text="Goals Completed:"
+        android:layout_marginTop="16dp"
+        android:text="Sensor Value:"
         android:textSize="20sp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/stepsHrTextView" />
+        app:layout_constraintTop_toBottomOf="@+id/stepGoalEditText" />
 
     <TextView
         android:id="@+id/totalStepsTextView"
@@ -52,7 +40,67 @@
         android:text="Total Steps:"
         android:textSize="20sp"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/stepGoalEditText" />
+        app:layout_constraintTop_toBottomOf="@+id/sensorValueTextView" />
+
+    <TextView
+        android:id="@+id/goalsCompletedValueTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginLeft="24dp"
+        android:layout_marginTop="16dp"
+        android:text="0"
+        android:textSize="20sp"
+        app:layout_constraintStart_toEndOf="@+id/goalsCompletedTextView"
+        app:layout_constraintTop_toBottomOf="@+id/stepsHrValueTextView" />
+
+    <TextView
+        android:id="@+id/stepsHrTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="16dp"
+        android:text="Steps/hr:"
+        android:textSize="20sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/totalStepsTextView" />
+
+    <TextView
+        android:id="@+id/goalsCompletedTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginLeft="16dp"
+        android:layout_marginTop="16dp"
+        android:text="Goals Completed:"
+        android:textSize="20sp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/stepsHrTextView" />
+
+    <TextView
+        android:id="@+id/stepsHrValueTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginLeft="24dp"
+        android:layout_marginTop="16dp"
+        android:text="0"
+        android:textSize="20sp"
+        app:layout_constraintStart_toEndOf="@+id/goalsCompletedTextView"
+        app:layout_constraintTop_toBottomOf="@+id/totalStepsValueTextView" />
+
+    <TextView
+        android:id="@+id/totalStepsValueTextView"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="24dp"
+        android:layout_marginLeft="24dp"
+        android:layout_marginTop="16dp"
+        android:text="0"
+        android:textSize="20sp"
+        app:layout_constraintStart_toEndOf="@+id/goalsCompletedTextView"
+        app:layout_constraintTop_toBottomOf="@+id/sensorValueValueTextView" />
 
     <Button
         android:id="@+id/restartButton"
@@ -95,30 +143,6 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
 
-    <TextView
-        android:id="@+id/stepsHrTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginLeft="16dp"
-        android:layout_marginTop="8dp"
-        android:text="Steps/hr:"
-        android:textSize="20sp"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/totalStepsTextView" />
-
-    <TextView
-        android:id="@+id/totalStepsValueTextView"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_marginStart="24dp"
-        android:layout_marginLeft="24dp"
-        android:layout_marginTop="16dp"
-        android:text="0"
-        android:textSize="20sp"
-        app:layout_constraintStart_toEndOf="@+id/goalsCompletedTextView"
-        app:layout_constraintTop_toBottomOf="@+id/stepGoalEditText" />
-
     <ImageView
         android:id="@+id/compassImageView"
         android:layout_width="284dp"
@@ -129,6 +153,6 @@
         app:layout_constraintHorizontal_bias="0.496"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/goalsCompletedTextView"
-        app:layout_constraintVertical_bias="0.0"
+        app:layout_constraintVertical_bias="1.0"
         app:srcCompat="@drawable/compass" />
 </androidx.constraintlayout.widget.ConstraintLayout>

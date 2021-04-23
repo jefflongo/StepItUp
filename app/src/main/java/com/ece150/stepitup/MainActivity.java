@@ -1,15 +1,20 @@
 package com.ece150.stepitup;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.RequiresApi;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
 import androidx.core.app.NotificationCompat;
+import androidx.core.content.ContextCompat;
 
+import android.Manifest;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.hardware.Sensor;
 import android.hardware.SensorEvent;
 import android.hardware.SensorEventListener;
@@ -35,11 +40,13 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private int mTotalSteps = 0;
     private float mStepsHr = 0;
     private int mGoalsCompleted = 0;
+    private int mStepsBeforeAppStart = 0;
 
     private int mStepGoal = STEP_GOAL_INVALID;
 
     private SensorManager mSensorManager;
     private Sensor mAccelerometer = null;
+    private Sensor mStepCounterSensor = null;
 
     // ECE 251 ONLY
     private Sensor mMagnetometer = null;
@@ -52,6 +59,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
     private StepDetector mStepDetector = new StepDetector();
 
     private EditText mStepGoalEditText;
+    private TextView mSensorValueTextView;
     private TextView mTotalStepsTextView;
     private TextView mStepsHrTextView;
     private TextView mGoalsCompletedTextView;
@@ -66,6 +74,7 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
         setContentView(R.layout.activity_main);
 
         mStepGoalEditText = (EditText) findViewById(R.id.stepGoalEditText);
+        mSensorValueTextView = (TextView) findViewById(R.id.sensorValueValueTextView);
         mTotalStepsTextView = (TextView) findViewById(R.id.totalStepsValueTextView);
         mStepsHrTextView = (TextView) findViewById(R.id.stepsHrValueTextView);
         mGoalsCompletedTextView = (TextView) findViewById(R.id.goalsCompletedValueTextView);
@@ -149,11 +158,25 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             }
         });
 
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.ACTIVITY_RECOGNITION)
+                != PackageManager.PERMISSION_GRANTED) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
+                ActivityCompat.requestPermissions(this,
+                        new String[]{Manifest.permission.ACTIVITY_RECOGNITION}, 1);
+            }
+        }
+
         mSensorManager = (SensorManager)getSystemService(Context.SENSOR_SERVICE);
         mAccelerometer = mSensorManager.getDefaultSensor(Sensor.TYPE_ACCELEROMETER);
         mMagnetometer = mSensorManager.getDefaultSensor(Sensor.TYPE_MAGNETIC_FIELD);
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+            mStepCounterSensor = mSensorManager.getDefaultSensor(Sensor.TYPE_STEP_COUNTER);
+        }
         if (mAccelerometer != null) {
             mSensorManager.registerListener(this, mAccelerometer, SensorManager.SENSOR_DELAY_GAME);
+        }
+        if (mStepCounterSensor != null) {
+            mSensorManager.registerListener(this, mStepCounterSensor, SensorManager.SENSOR_DELAY_GAME);
         }
         // ECE 251 ONLY
         if (mMagnetometer != null) {
@@ -188,6 +211,14 @@ public class MainActivity extends AppCompatActivity implements SensorEventListen
             // ------------
             if (mStepDetector.detectStep(event.values[0], event.values[1], event.values[2])) {
                 handleStep();
+            }
+        }
+        if (event.sensor.getType() == Sensor.TYPE_STEP_COUNTER) {
+            if (mStepsBeforeAppStart == 0) {
+                mStepsBeforeAppStart = (int) event.values[0];
+            } else {
+                int totalSteps = (int) event.values[0] - mStepsBeforeAppStart;
+                mSensorValueTextView.setText(String.valueOf(totalSteps));
             }
         }
         // ECE 251 ONLY
